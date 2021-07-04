@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Handlers.Queries.Library
 {
-    public class AuthorsQuery : IRequest<AuthorsQueryResponse>, IQuery
+    public class AuthorsQuery : IRequest<AuthorsQueryResponse>, IQuery<AuthorsQueryResponse>
     {
     }
 

@@ -1,6 +1,8 @@
+using Api.HostedServices;
 using Data.Contexts;
-using Domain.BaseTypes;
 using Domain.Handlers;
+using Domain.Services.Telemetry;
+using Domain.Utils;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,16 +16,19 @@ namespace Api
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+        private readonly ConfigurationManager _configurationManager;
+        private readonly IConfigurationRoot _configuration;
 
-        public IConfiguration Configuration { get; }
+        public Startup(IWebHostEnvironment webHostEnvironment)
+        {
+            _configurationManager = ConfigurationManager.CreateForWebAndService(webHostEnvironment.ContentRootPath, webHostEnvironment.EnvironmentName);
+            _configuration = _configurationManager.Configuration;
+        }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton(_configurationManager);
             AddDb(services);
 
             services.AddControllers();
@@ -32,22 +37,34 @@ namespace Api
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Api", Version = "v1" });
             });
 
+            AddServices(services);
             AddCQRS(services);
+            AddHostedServices(services);
+        }
+
+        public void AddHostedServices(IServiceCollection services)
+        {
+            services.AddHostedService<TelemetryPushService>();
         }
 
         private void AddCQRS(IServiceCollection services)
         {
-            services.RegisterRequestHandlers();
             services.AddScoped(typeof(IPipelineBehavior<,>), typeof(CommandTelemetryBehavior<,>));
+            services.RegisterRequestHandlers();
+        }
+
+        public void AddServices(IServiceCollection services)
+        {
+            services.AddScoped<ITelemetryService, TelemetryService>();
         }
 
         private void AddDb(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
+            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(_configurationManager.ConnectionString.Db,
                                                                                         b => b.MigrationsAssembly("Data")));
 
             services.AddDatabaseDeveloperPageExceptionFilter();
-            services.AddSingleton(x => new ConnectionString(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddSingleton(x => _configurationManager.ConnectionString);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Handlers.Queries.Library
 {
-    public class AuthorQuery : IRequest<AuthorQueryResponse>, IQuery
+    public class AuthorQuery : IRequest<AuthorQueryResponse>, IQuery<AuthorQueryResponse>
     {
         public AuthorQuery(int id)
         {
@@ -41,7 +41,7 @@ namespace Domain.Handlers.Queries.Library
             {
                 var result = await _dbContext.Authors.FindAsync(query.Id);
 
-                return new AuthorQueryResponse { Author = result }; ;
+                return new AuthorQueryResponse { Author = result };
             }
         }
     }

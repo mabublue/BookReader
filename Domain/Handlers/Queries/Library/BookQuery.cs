@@ -1,16 +1,13 @@
 ﻿using Data.Contexts;
 using Data.Models;
-using Domain.BaseTypes;
 using MediatR;
-using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Domain.Handlers.Queries.Library
 {
-    public class BookQuery : IRequest<BookQueryResponse>, IQuery
+    public class BookQuery : IRequest<BookQueryResponse>, IQuery<BookQueryResponse>
     {
         public BookQuery(int id)
         {
